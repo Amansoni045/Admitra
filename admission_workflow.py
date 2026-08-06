@@ -30,3 +30,11 @@ academic_retriever = build_retriever("academics_handook.pdf")
 fee_retriever = build_retriever("fee_structure.pdf")
 
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.4)
+
+
+
+class State(TypedDict):
+    programme : str 
+    messages : Annotated[list, add_messages]
+    query_type : str 
+    retrieved_context : str   
