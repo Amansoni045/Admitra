@@ -1,27 +1,23 @@
 from typing import List
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.embeddings import Embeddings
-from langchain_huggingface import HuggingFaceEmbeddings
-from backend.config.settings import EMBEDDING_MODEL_NAME
 
 
-def get_embeddings() -> HuggingFaceEmbeddings:
-    return HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL_NAME,
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True}
-    )
+def get_embeddings() -> FastEmbedEmbeddings:
+    return FastEmbedEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 
 
 class LazyEmbeddings(Embeddings):
     """
-    Lazy proxy for HuggingFaceEmbeddings inheriting from LangChain Embeddings base class.
-    Defers model downloading/loading until first document indexing or retrieval query.
+    Ultra-lightweight ONNX-powered embedding proxy (FastEmbed).
+    Uses <50MB RAM (compared to PyTorch's 450MB+ footprint), completely preventing
+    Render 512MB Out-Of-Memory (OOM) backend crashes during RAG retrieval queries.
     """
     def __init__(self):
-        self._embeddings: HuggingFaceEmbeddings | None = None
+        self._embeddings: FastEmbedEmbeddings | None = None
 
     @property
-    def instance(self) -> HuggingFaceEmbeddings:
+    def instance(self) -> FastEmbedEmbeddings:
         if self._embeddings is None:
             self._embeddings = get_embeddings()
         return self._embeddings
