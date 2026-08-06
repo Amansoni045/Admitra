@@ -68,3 +68,22 @@ def classifier_node(state: State) -> dict:
         category = "general"
 
     return {"query_type" : category}
+
+def academic_rag_node(state: State) -> dict:
+    """Retrieves relevant chunks from the academics handbook."""
+    query = state["messages"][-1].content
+    docs = academic_retriever.invoke(query)
+    context = "\n\n".join([doc.page_content for doc in docs])
+    return {"retrieved_context": context}
+
+def fee_rag_node(state: State) -> dict:
+    """Retrieves relevant chunks from the fee structure PDF."""
+    query = state["messages"][-1].content
+    docs = fee_retriever.invoke(query)
+    context = "\n\n".join([doc.page_content for doc in docs])
+    return {"retrieved_context": context}
+
+
+def general_node(state: State) -> dict:
+    """Answers directly using the LLM's own knowledge, no retrieval needed."""
+    return {"retrieved_context": "NO_RETRIEVAL_NEEDED"}
