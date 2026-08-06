@@ -1,4 +1,3 @@
-from h11._abnf import chunk_size
 import os 
 from typing import TypedDict , Annotated 
 from langgraph.graph.message import add_messages 
@@ -18,7 +17,7 @@ def build_retriever(pdf_path : str):
     loader = PyPDFLoader(pdf_path)
     document = loader.load()
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_oevrlap = 100)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap = 100)
 
     chunks = splitter.split_documents(document) 
 
@@ -26,7 +25,7 @@ def build_retriever(pdf_path : str):
 
     return vectorstore.as_retriever(search_kwargs = {"k":4})
 
-academic_retriever = build_retriever("academics_handook.pdf")
+academic_retriever = build_retriever("academics_handbook.pdf")
 fee_retriever = build_retriever("fee_structure.pdf")
 
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.4)
@@ -143,3 +142,35 @@ graph.add_edge("general","response")
 graph.add_edge("response",END)
 
 app = graph.compile()
+
+
+print("Welcome to the College Assistant \n\n")
+
+print("Which program are you in ?")
+print("1. BCA")
+print("2. BBA")
+print("3. B.Com (Hons)")
+
+programme_map = {
+    "1" : "BCA",
+    "2" : "BBA",
+    "3" : "B.Com (Hons)"
+}
+
+student_programme = input("Enter your program: ")
+
+print(f"\nGreat You're set as a {student_programme} student. Ask anything about your college")
+
+while True: 
+    user_input = input("You: ")
+    if user_input.lower() in ["exit", "quit", "bye"]:
+        print("Goodbye!")
+        break 
+
+    result = app.invoke({
+        "programme" : student_programme,
+        "messages" : [("human", user_input)]
+    })
+
+    last_ai_message = result["messages"][-1].content
+    print("Assistant:", last_ai_message)
