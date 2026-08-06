@@ -113,10 +113,33 @@ def response_node(state: State) -> dict:
     response = llm.invoke(prompt)
     return {"messages": [("ai", response.content.strip())]}
 
-def router_query(state: State):
+def route_query(state: State):
     if state["query_type"] == "academic":
         return "academic_rag" 
     elif state["query_type"] == "fee":
         return "fee_rag"
     else:
         return "general"
+
+graph = StateGraph(State)
+
+graph.add_node("classifier",classifier_node)
+graph.add_node("academic_rag",academic_rag_node)
+graph.add_node("fee_rag",fee_rag_node)
+graph.add_node("general",general_node)
+graph.add_node("response",response_node)
+
+
+graph.add_edge(START,"classifier")
+
+graph.add_conditional_edges(
+    "classifier",route_query
+)
+
+graph.add_edge("academic_rag","response")
+graph.add_edge("fee_rag","response")
+graph.add_edge("general","response")
+
+graph.add_edge("response",END)
+
+app = graph.compile()
