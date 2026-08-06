@@ -1,2 +1,16 @@
-.venv
+# Virtual environments & env files
+.venv/
 .env
+.env.local
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Next.js & Node
+frontend/.next/
+frontend/node_modules/
+node_modules/
+
+# OS files
+.DS_Store
