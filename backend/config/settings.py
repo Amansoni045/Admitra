@@ -10,6 +10,7 @@ DATA_DIR: Path = BASE_DIR / "data"
 ACADEMICS_PDF_PATH: str = str(DATA_DIR / "academics_handbook.pdf")
 FEE_STRUCTURE_PDF_PATH: str = str(DATA_DIR / "fee_structure.pdf")
 
+GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL_NAME: str = os.getenv("GROQ_MODEL_NAME", "llama-3.3-70b-versatile")
 LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.4"))
 

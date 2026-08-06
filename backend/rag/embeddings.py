@@ -4,29 +4,23 @@ from langchain_core.embeddings import Embeddings
 
 
 def get_embeddings() -> FastEmbedEmbeddings:
+    """Returns FastEmbed ONNX embedding engine instance."""
     return FastEmbedEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 
 
 class LazyEmbeddings(Embeddings):
     """
-    Ultra-lightweight ONNX-powered embedding proxy (FastEmbed).
-    Uses <50MB RAM (compared to PyTorch's 450MB+ footprint), completely preventing
-    Render 512MB Out-Of-Memory (OOM) backend crashes during RAG retrieval queries.
+    Delegates embedding requests to the singleton FastEmbed ONNX engine
+    managed by ResourceManager.
     """
-    def __init__(self):
-        self._embeddings: FastEmbedEmbeddings | None = None
-
-    @property
-    def instance(self) -> FastEmbedEmbeddings:
-        if self._embeddings is None:
-            self._embeddings = get_embeddings()
-        return self._embeddings
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        return self.instance.embed_documents(texts)
+        from backend.startup.resource_manager import resource_manager
+        return resource_manager.get_embeddings().embed_documents(texts)
 
     def embed_query(self, text: str) -> List[float]:
-        return self.instance.embed_query(text)
+        from backend.startup.resource_manager import resource_manager
+        return resource_manager.get_embeddings().embed_query(text)
 
     def __call__(self, text: str) -> List[float]:
         return self.embed_query(text)

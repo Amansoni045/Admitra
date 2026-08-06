@@ -1,8 +1,11 @@
+import logging
 import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.routes import ChatRequest, handle_chat_request
-from backend.rag.retriever import academic_retriever, fee_retriever
+from backend.startup.resource_manager import resource_manager
+
+logger = logging.getLogger("admitra.main")
 
 app = FastAPI(title="Admitra API", version="1.0")
 
@@ -15,19 +18,22 @@ app.add_middleware(
 )
 
 
-def prewarm_vectorstores():
-    """Background pre-warming of FAISS vectorstores at server launch."""
+def async_prewarm():
+    """Background pre-warming of singletons (LLM, Embeddings, FAISS indexes)."""
     try:
-        _ = academic_retriever.vectorstore
-        _ = fee_retriever.vectorstore
+        logger.info("Pre-warming singleton resources in background thread...")
+        _ = resource_manager.get_academic_vectorstore()
+        _ = resource_manager.get_fee_vectorstore()
+        _ = resource_manager.get_llm()
+        logger.info("Singleton resources successfully pre-warmed!")
     except Exception as e:
-        print(f"Vectorstore prewarming notice: {e}")
+        logger.warning(f"Background pre-warming notice: {e}")
 
 
 @app.on_event("startup")
 def startup_event():
-    # Pre-warm vectorstores in a background thread so Uvicorn binds port instantly
-    threading.Thread(target=prewarm_vectorstores, daemon=True).start()
+    # Instantly bind port and pre-warm heavy resources in background
+    threading.Thread(target=async_prewarm, daemon=True).start()
 
 
 @app.get("/")
